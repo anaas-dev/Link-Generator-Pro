@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @plugin "@tailwindcss/typography";
@@ -6,8 +6,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
-  --font-display: 'Outfit', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Sora', sans-serif;
 
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -46,6 +46,8 @@
   --color-sidebar-accent: hsl(var(--sidebar-accent));
   --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
 
+  --color-success: hsl(var(--success));
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -54,46 +56,48 @@
 }
 
 :root {
-  /* Deep Navy and Sun Yellow Theme */
-  --background: 210 20% 98%; /* Light gray-blue background */
-  --foreground: 221 64% 16%; /* Deep Navy Text */
+  /* LinkFlow Refined Theme */
+  --background: 223 33% 97%; /* #f4f6fb */
+  --foreground: 222 47% 11%; /* #0f172a */
   
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 50 100% 50%; /* Sun Yellow Focus Ring */
+  --border: 214 32% 91%; /* #e2e8f0 */
+  --input: 214 32% 91%; /* #e2e8f0 */
+  --ring: 218 90% 64%; /* #4f8ef7 */
 
-  --card: 0 0% 100%;
-  --card-foreground: 221 64% 16%;
+  --card: 0 0% 100%; /* #ffffff */
+  --card-foreground: 222 47% 11%; /* #0f172a */
   --card-border: 214 32% 91%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 221 64% 16%;
+  --popover-foreground: 222 47% 11%;
   --popover-border: 214 32% 91%;
 
-  --primary: 221 64% 16%; /* Deep Navy */
+  --primary: 218 90% 64%; /* #4f8ef7 */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 221 64% 16%;
+  --secondary: 25 95% 53%; /* #f97316 */
+  --secondary-foreground: 0 0% 100%;
 
   --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+  --muted-foreground: 215 16% 47%; /* #64748b */
 
-  --accent: 50 100% 50%; /* Sun Yellow */
-  --accent-foreground: 221 64% 16%; /* Navy text on Yellow */
+  --accent: 25 95% 53%; /* #f97316 */
+  --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive: 0 84% 60%; /* #ef4444 */
+  --destructive-foreground: 0 0% 100%;
 
-  --sidebar: 221 64% 12%; /* Darker Navy for Sidebar */
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 221 64% 16%;
-  --sidebar-primary: 50 100% 50%; /* Yellow Highlights in Sidebar */
-  --sidebar-primary-foreground: 221 64% 12%;
-  --sidebar-accent: 221 64% 20%;
-  --sidebar-accent-foreground: 210 40% 98%;
+  --success: 160 84% 39%; /* #10b981 */
 
-  --radius: 0.75rem; /* 12px for modern pill shape */
+  --sidebar: 215 56% 12%; /* #0d1b2e */
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-border: 215 56% 12%; 
+  --sidebar-primary: 214 52% 25%; /* #1e3a5f */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 214 52% 25%; /* #1e3a5f */
+  --sidebar-accent-foreground: 0 0% 100%;
+
+  --radius: 1rem; /* 16px border-radius default */
 }
 
 @layer base {
@@ -102,11 +106,11 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground selection:bg-accent selection:text-accent-foreground;
+    @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-primary leading-[1.7];
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    @apply tracking-tight font-bold;
+    @apply tracking-tight font-bold text-foreground;
   }
 }

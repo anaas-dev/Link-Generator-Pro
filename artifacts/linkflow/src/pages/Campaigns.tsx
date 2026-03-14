@@ -31,7 +31,7 @@ const campaignSchema = z.object({
 type CampaignFormData = z.infer<typeof campaignSchema>;
 
 const PRESET_COLORS = [
-  "#0f2044", "#FFD600", "#10B981", "#EF4444", "#8B5CF6", "#3B82F6", "#EC4899", "#F97316"
+  "#4f8ef7", "#FFD600", "#10B981", "#EF4444", "#8B5CF6", "#3B82F6", "#EC4899", "#F97316"
 ];
 
 export default function Campaigns() {
@@ -118,7 +118,7 @@ export default function Campaigns() {
         </div>
         <button
           onClick={openCreateModal}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-medium shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2"
+          className="bg-[#4f8ef7] hover:bg-[#4f8ef7]/90 text-white px-6 py-3 rounded-xl font-semibold shadow-[0_4px_12px_rgba(79,142,247,0.3)] transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2 cursor-pointer"
         >
           <Plus className="w-5 h-5" />
           New Campaign
@@ -134,12 +134,12 @@ export default function Campaigns() {
       ) : campaigns && campaigns.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {campaigns.map((campaign) => (
-            <div key={campaign.id} className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col h-full relative overflow-hidden">
+            <div key={campaign.id} className="bg-card border border-border rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1 group flex flex-col h-full relative overflow-hidden cursor-pointer">
               <div 
-                className="absolute top-0 left-0 w-full h-1.5 opacity-80"
+                className="absolute top-0 left-0 w-1 h-full rounded-l-2xl"
                 style={{ backgroundColor: campaign.color }}
               />
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex justify-between items-start mb-4 pl-2">
                 <div 
                   className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm"
                   style={{ backgroundColor: campaign.color }}
@@ -148,41 +148,43 @@ export default function Campaigns() {
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="p-2 -mr-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
+                    <button className="p-2 -mr-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer">
                       <MoreVertical className="w-5 h-5" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40 rounded-xl">
-                    <DropdownMenuItem onClick={() => openEditModal(campaign)} className="cursor-pointer">
+                  <DropdownMenuContent align="end" className="w-40 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+                    <DropdownMenuItem onClick={() => openEditModal(campaign)} className="cursor-pointer font-medium">
                       <Edit2 className="w-4 h-4 mr-2" /> Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDelete(campaign.id)} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
+                    <DropdownMenuItem onClick={() => handleDelete(campaign.id)} className="cursor-pointer text-[#ef4444] focus:text-[#ef4444] focus:bg-[#ef4444]/10 font-medium">
                       <Trash2 className="w-4 h-4 mr-2" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
               
-              <h3 className="text-xl font-bold font-display text-foreground mb-2 line-clamp-1">{campaign.name}</h3>
-              <p className="text-muted-foreground text-sm line-clamp-2 mb-6 flex-1">
-                {campaign.description || "No description provided."}
-              </p>
+              <div className="pl-2 flex-1 flex flex-col">
+                <h3 className="text-xl font-bold font-display text-foreground mb-2 line-clamp-1">{campaign.name}</h3>
+                <p className="text-muted-foreground text-sm line-clamp-2 mb-6 flex-1">
+                  {campaign.description || "No description provided."}
+                </p>
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Links</p>
-                  <p className="text-lg font-bold">{campaign.linkCount}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Clicks</p>
-                  <p className="text-lg font-bold text-primary">{campaign.totalClicks.toLocaleString()}</p>
+                <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
+                  <div className="flex flex-col">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.05em] mb-1">Links</p>
+                    <p className="text-lg font-bold text-foreground">{campaign.linkCount}</p>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.05em] mb-1">Clicks</p>
+                    <p className="text-2xl font-bold text-[#f97316]">{campaign.totalClicks.toLocaleString()}</p>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-card border border-dashed border-border/80 rounded-3xl p-12 text-center max-w-2xl mx-auto mt-12 shadow-sm">
+        <div className="bg-card border border-dashed border-border rounded-2xl p-12 text-center max-w-2xl mx-auto mt-12 shadow-sm">
           <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
             <FolderKanban className="w-10 h-10 text-muted-foreground/50" />
           </div>
@@ -192,7 +194,7 @@ export default function Campaigns() {
           </p>
           <button
             onClick={openCreateModal}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-medium shadow-md transition-all inline-flex items-center gap-2"
+            className="bg-[#4f8ef7] hover:bg-[#4f8ef7]/90 text-white px-6 py-3 rounded-xl font-semibold shadow-md transition-all inline-flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-5 h-5" />
             Create Campaign
@@ -201,8 +203,8 @@ export default function Campaigns() {
       )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px] rounded-2xl p-0 overflow-hidden border-0">
-          <div className="bg-muted/30 p-6 border-b border-border/50">
+        <DialogContent className="sm:max-w-[500px] rounded-2xl p-0 overflow-hidden border-0 shadow-[0_10px_40px_rgba(0,0,0,0.1)]">
+          <div className="bg-muted/30 p-6 border-b border-border">
             <DialogTitle className="text-2xl font-display font-bold">
               {editingId ? "Edit Campaign" : "New Campaign"}
             </DialogTitle>
@@ -213,49 +215,48 @@ export default function Campaigns() {
           
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Campaign Name</label>
+              <label className="text-xs font-bold text-foreground uppercase tracking-[0.05em]">Campaign Name</label>
               <Input 
                 {...register("name")} 
                 placeholder="e.g. Summer Sale 2024" 
-                className="rounded-xl h-12 bg-background border-border/60 focus:ring-primary/20"
+                className="rounded-xl h-11 bg-white border-slate-200 focus:ring-2 focus:ring-[#4f8ef7]/20"
               />
-              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+              {errors.name && <p className="text-sm text-[#ef4444]">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Description (Optional)</label>
+              <label className="text-xs font-bold text-foreground uppercase tracking-[0.05em]">Description (Optional)</label>
               <Textarea 
                 {...register("description")} 
                 placeholder="What is this campaign for?"
-                className="rounded-xl resize-none bg-background border-border/60 focus:ring-primary/20"
-                rows={3}
+                className="rounded-xl resize-none bg-white border-slate-200 focus:ring-2 focus:ring-[#4f8ef7]/20 min-h-[100px]"
               />
             </div>
 
             <div className="space-y-3">
-              <label className="text-sm font-semibold text-foreground">Theme Color</label>
+              <label className="text-xs font-bold text-foreground uppercase tracking-[0.05em]">Theme Color</label>
               <div className="flex flex-wrap gap-3">
                 {PRESET_COLORS.map(c => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setValue("color", c)}
-                    className={`w-10 h-10 rounded-full transition-all flex items-center justify-center ${selectedColor === c ? 'ring-2 ring-offset-2 ring-foreground scale-110' : 'hover:scale-110 opacity-80 hover:opacity-100'}`}
+                    className={`w-10 h-10 rounded-full transition-all flex items-center justify-center cursor-pointer ${selectedColor === c ? 'ring-2 ring-offset-2 ring-foreground scale-110 shadow-md' : 'hover:scale-110 opacity-80 hover:opacity-100 hover:shadow-sm'}`}
                     style={{ backgroundColor: c }}
                   />
                 ))}
               </div>
               <input type="hidden" {...register("color")} />
-              {errors.color && <p className="text-sm text-destructive">{errors.color.message}</p>}
+              {errors.color && <p className="text-sm text-[#ef4444]">{errors.color.message}</p>}
             </div>
 
-            <div className="pt-4 flex justify-end gap-3 border-t border-border/50">
-              <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl">
+            <div className="pt-4 flex justify-end gap-3 border-t border-border">
+              <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl cursor-pointer font-semibold">
                 Cancel
               </Button>
               <Button 
                 type="submit" 
-                className="rounded-xl px-6 bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
+                className="rounded-xl px-6 bg-[#4f8ef7] hover:bg-[#4f8ef7]/90 text-white shadow-md cursor-pointer font-semibold"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Campaign"}

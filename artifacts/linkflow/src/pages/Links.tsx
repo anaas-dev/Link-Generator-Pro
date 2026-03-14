@@ -10,7 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Plus, MoreHorizontal, Trash2, Edit2, Copy, CheckCircle2, QrCode, Link2, ExternalLink, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, MoreHorizontal, Trash2, Edit2, Copy, CheckCircle2, QrCode, Link2, ExternalLink, Calendar, ChevronDown, ChevronUp, MousePointerClick, Search } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,8 +40,16 @@ const linkSchema = z.object({
 
 type LinkFormData = z.infer<typeof linkSchema>;
 
+const COLORS = ["#4f8ef7", "#f97316", "#10b981", "#ef4444", "#8b5cf6", "#3b82f6", "#ec4899"];
+function getFaviconColor(str: string) {
+  if (!str) return COLORS[0];
+  const charCode = str.charCodeAt(0);
+  return COLORS[charCode % COLORS.length];
+}
+
 export default function Links() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState("");
   const { data: links, isLoading: loadingLinks } = useGetLinks({ campaignId: selectedCampaignId });
   const { data: campaigns } = useGetCampaigns();
   const queryClient = useQueryClient();
@@ -83,7 +91,7 @@ export default function Links() {
       destinationUrl: link.destinationUrl,
       slug: link.slug || "",
       campaignId: link.campaignId,
-      expiresAt: link.expiresAt ? link.expiresAt.substring(0, 16) : "", // Format for datetime-local input
+      expiresAt: link.expiresAt ? link.expiresAt.substring(0, 16) : "",
       utmSource: link.utmSource || "",
       utmMedium: link.utmMedium || "",
       utmCampaign: link.utmCampaign || "",
@@ -96,7 +104,6 @@ export default function Links() {
   };
 
   const onSubmit = (data: LinkFormData) => {
-    // clean empty strings to null
     const cleanedData = Object.fromEntries(
       Object.entries(data).map(([k, v]) => [k, v === "" ? null : v])
     ) as any;
@@ -172,9 +179,29 @@ export default function Links() {
           <p className="text-muted-foreground mt-2">Create, manage, and track all your shortened URLs.</p>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <button
+          onClick={openCreateModal}
+          className="h-11 bg-[#4f8ef7] hover:bg-[#4f8ef7]/90 text-white px-6 rounded-xl font-semibold shadow-[0_4px_12px_rgba(79,142,247,0.3)] transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Create Link</span>
+        </button>
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col">
+        {/* Filter Bar */}
+        <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 bg-white/50">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search links..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9 h-11 rounded-xl border-slate-200 focus:ring-[#4f8ef7]/20 bg-white"
+            />
+          </div>
           <select 
-            className="h-12 px-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 text-sm flex-1 md:w-48 appearance-none"
+            className="h-11 px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#4f8ef7]/20 text-sm md:w-56 appearance-none font-medium cursor-pointer"
             value={selectedCampaignId || ""}
             onChange={(e) => setSelectedCampaignId(e.target.value ? Number(e.target.value) : undefined)}
           >
@@ -183,28 +210,18 @@ export default function Links() {
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
-          
-          <button
-            onClick={openCreateModal}
-            className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground px-6 rounded-xl font-medium shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 whitespace-nowrap"
-          >
-            <Plus className="w-5 h-5" />
-            <span className="hidden sm:inline">Create Link</span>
-          </button>
         </div>
-      </div>
 
-      {/* Table/List View */}
-      <div className="bg-card border border-border/60 rounded-3xl shadow-sm overflow-hidden">
+        {/* Table View */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-muted/40 border-b border-border text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                <th className="px-6 py-5">Link Details</th>
-                <th className="px-6 py-5 hidden md:table-cell">Campaign</th>
-                <th className="px-6 py-5 text-right">Clicks</th>
-                <th className="px-6 py-5 text-center">Status</th>
-                <th className="px-6 py-5 text-right">Actions</th>
+              <tr className="bg-white/95 backdrop-blur sticky top-0 border-b border-border text-[11px] font-bold text-muted-foreground uppercase tracking-[0.05em]">
+                <th className="px-6 py-4">Link Details</th>
+                <th className="px-6 py-4 hidden md:table-cell">Campaign</th>
+                <th className="px-6 py-4 text-right">Clicks</th>
+                <th className="px-6 py-4 text-center">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -219,41 +236,43 @@ export default function Links() {
                   </tr>
                 ))
               ) : links && links.length > 0 ? (
-                links.map((link) => {
+                links.map((link, idx) => {
                   const isExpired = link.expiresAt && isPast(parseISO(link.expiresAt));
                   const shortUrl = generateShortUrl(link.slug);
                   const cmp = campaigns?.find(c => c.id === link.campaignId);
+                  const rowClass = idx % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]';
+                  const favColor = getFaviconColor(link.slug);
                   
                   return (
-                    <tr key={link.id} className="hover:bg-muted/20 transition-colors group">
+                    <tr key={link.id} className={cn(
+                      rowClass,
+                      "hover:shadow-[inset_0_0_0_1px_rgba(79,142,247,0.3)] transition-all group relative z-0 hover:z-10"
+                    )}>
                       <td className="px-6 py-5 max-w-xs sm:max-w-md">
-                        <div className="flex flex-col gap-1.5">
-                          <span className="font-bold text-foreground text-base truncate flex items-center gap-2">
-                            {link.title}
-                            {isExpired && <span className="text-[10px] uppercase bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-sm">Expired</span>}
-                          </span>
-                          
-                          <div className="flex items-center gap-2 mt-1">
-                            <a href={shortUrl} target="_blank" rel="noreferrer" className="text-primary font-medium text-sm hover:underline flex items-center gap-1">
-                              {shortUrl.replace(/^https?:\/\//, '')}
-                              <ExternalLink className="w-3 h-3 opacity-50" />
-                            </a>
-                            <button 
-                              onClick={() => handleCopy(link.slug, link.id)}
-                              className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                              title="Copy URL"
-                            >
-                              {copiedId === link.id ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                            </button>
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold font-display shadow-sm flex-shrink-0 mt-1 uppercase" style={{ backgroundColor: favColor }}>
+                            {link.slug ? link.slug.charAt(0) : 'L'}
                           </div>
-                          <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1">
-                            <span className="opacity-50">→</span> {link.destinationUrl}
-                          </span>
+                          <div className="flex flex-col gap-1.5 min-w-0">
+                            <span className="font-bold text-foreground text-base truncate flex items-center gap-2 font-display">
+                              {link.title}
+                              {isExpired && <span className="text-[10px] font-bold uppercase bg-[#ef4444]/10 text-[#ef4444] px-2 py-0.5 rounded-md">Expired</span>}
+                            </span>
+                            
+                            <div className="flex items-center gap-2">
+                              <a href={shortUrl} target="_blank" rel="noreferrer" className="text-[#4f8ef7] font-mono font-medium text-sm hover:underline flex items-center gap-1">
+                                {shortUrl.replace(/^https?:\/\//, '')}
+                              </a>
+                            </div>
+                            <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1 mt-0.5">
+                              <span className="opacity-50">→</span> {link.destinationUrl}
+                            </span>
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-5 hidden md:table-cell">
                         {cmp ? (
-                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border/50 bg-background text-sm font-medium">
+                          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-border bg-white text-[11px] font-bold uppercase tracking-wide shadow-sm">
                             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cmp.color }}></div>
                             {cmp.name}
                           </div>
@@ -261,41 +280,88 @@ export default function Links() {
                           <span className="text-muted-foreground text-sm italic">None</span>
                         )}
                       </td>
-                      <td className="px-6 py-5 text-right font-display font-bold text-lg">
-                        {link.clickCount.toLocaleString()}
+                      <td className="px-6 py-5 text-right font-display font-bold text-lg text-[#f97316]">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {link.clickCount.toLocaleString()}
+                          <MousePointerClick className="w-4 h-4 opacity-50" />
+                        </div>
                       </td>
                       <td className="px-6 py-5 text-center">
-                        <div className="flex justify-center">
+                        <div className="flex flex-col items-center justify-center gap-2">
                           <Switch 
                             checked={link.isActive && !isExpired} 
                             onCheckedChange={() => toggleStatus(link.id, link.isActive)}
                             disabled={!!isExpired}
+                            className="data-[state=checked]:bg-[#10b981]"
                           />
+                          {link.isActive && !isExpired ? (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#10b981] uppercase tracking-wide">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span> Live
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground"></span> Paused
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors">
-                              <MoreHorizontal className="w-5 h-5" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 rounded-xl p-1 shadow-xl">
-                            <DropdownMenuItem onClick={() => handleCopy(link.slug, link.id)} className="cursor-pointer py-2 px-3 rounded-lg">
-                              <Copy className="w-4 h-4 mr-2" /> Copy Link
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setQrModalId(link.id)} className="cursor-pointer py-2 px-3 rounded-lg">
-                              <QrCode className="w-4 h-4 mr-2" /> View QR Code
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-border/50" />
-                            <DropdownMenuItem onClick={() => openEditModal(link)} className="cursor-pointer py-2 px-3 rounded-lg">
-                              <Edit2 className="w-4 h-4 mr-2" /> Edit Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDelete(link.id)} className="cursor-pointer py-2 px-3 rounded-lg text-destructive focus:text-destructive focus:bg-destructive/10">
-                              <Trash2 className="w-4 h-4 mr-2" /> Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => handleCopy(link.slug, link.id)}
+                            className="p-2 rounded-lg hover:bg-[#4f8ef7]/10 text-muted-foreground hover:text-[#4f8ef7] transition-colors cursor-pointer"
+                            title="Copy URL"
+                          >
+                            {copiedId === link.id ? <CheckCircle2 className="w-4 h-4 text-[#10b981]" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                          <button 
+                            onClick={() => setQrModalId(link.id)}
+                            className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            title="View QR Code"
+                          >
+                            <QrCode className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => openEditModal(link)}
+                            className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            title="Edit Link"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <div className="w-px h-4 bg-border mx-1"></div>
+                          <button 
+                            onClick={() => handleDelete(link.id)}
+                            className="p-2 rounded-lg hover:bg-[#ef4444]/10 text-muted-foreground hover:text-[#ef4444] transition-colors cursor-pointer"
+                            title="Delete Link"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {/* Fallback for mobile where hover doesn't work */}
+                        <div className="md:hidden">
+                           <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors cursor-pointer">
+                                <MoreHorizontal className="w-5 h-5" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 rounded-xl p-1 shadow-[0_10px_40px_rgba(0,0,0,0.1)] border-none">
+                              <DropdownMenuItem onClick={() => handleCopy(link.slug, link.id)} className="cursor-pointer py-2 px-3 rounded-lg font-medium">
+                                <Copy className="w-4 h-4 mr-2" /> Copy Link
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setQrModalId(link.id)} className="cursor-pointer py-2 px-3 rounded-lg font-medium">
+                                <QrCode className="w-4 h-4 mr-2" /> View QR Code
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openEditModal(link)} className="cursor-pointer py-2 px-3 rounded-lg font-medium">
+                                <Edit2 className="w-4 h-4 mr-2" /> Edit Details
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-border" />
+                              <DropdownMenuItem onClick={() => handleDelete(link.id)} className="cursor-pointer py-2 px-3 rounded-lg text-[#ef4444] focus:text-[#ef4444] focus:bg-[#ef4444]/10 font-medium">
+                                <Trash2 className="w-4 h-4 mr-2" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -305,7 +371,7 @@ export default function Links() {
                   <td colSpan={5} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                       <Link2 className="w-12 h-12 mb-4 opacity-20" />
-                      <p className="text-lg font-medium text-foreground mb-1">No links found</p>
+                      <p className="text-lg font-display font-bold text-foreground mb-1">No links found</p>
                       <p className="text-sm max-w-sm mx-auto">
                         {selectedCampaignId ? "This campaign doesn't have any links yet." : "You haven't created any shortened links. Create your first one to start tracking."}
                       </p>
@@ -320,41 +386,41 @@ export default function Links() {
 
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[600px] rounded-2xl p-0 overflow-hidden border-0 max-h-[90vh] flex flex-col">
-          <div className="bg-muted/30 p-6 border-b border-border/50 flex-shrink-0">
-            <DialogTitle className="text-2xl font-display font-bold">
+        <DialogContent className="sm:max-w-[600px] rounded-2xl p-0 overflow-hidden border-0 shadow-[0_10px_40px_rgba(0,0,0,0.1)] max-h-[90vh] flex flex-col">
+          <div className="bg-white p-6 border-b border-border flex-shrink-0">
+            <DialogTitle className="text-2xl font-display font-bold text-foreground">
               {editingId ? "Edit Link" : "Create Link"}
             </DialogTitle>
           </div>
           
-          <div className="overflow-y-auto p-6">
+          <div className="overflow-y-auto p-6 bg-[#f8fafc]">
             <form id="link-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Destination URL <span className="text-destructive">*</span></label>
+                  <label className="text-[10px] font-bold text-foreground uppercase tracking-[0.05em]">Destination URL <span className="text-[#ef4444]">*</span></label>
                   <Input 
                     {...register("destinationUrl")} 
                     placeholder="https://example.com/very/long/path?param=value" 
-                    className="rounded-xl h-12 bg-background border-border/60 focus:ring-primary/20 font-mono text-sm"
+                    className="rounded-xl h-11 bg-white border-slate-200 focus:ring-2 focus:ring-[#4f8ef7]/20 font-mono text-sm shadow-sm"
                   />
-                  {errors.destinationUrl && <p className="text-sm text-destructive">{errors.destinationUrl.message}</p>}
+                  {errors.destinationUrl && <p className="text-sm text-[#ef4444]">{errors.destinationUrl.message}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-foreground">Title <span className="text-destructive">*</span></label>
+                    <label className="text-[10px] font-bold text-foreground uppercase tracking-[0.05em]">Title <span className="text-[#ef4444]">*</span></label>
                     <Input 
                       {...register("title")} 
                       placeholder="Summer Promo Banner" 
-                      className="rounded-xl h-12 bg-background border-border/60"
+                      className="rounded-xl h-11 bg-white border-slate-200 focus:ring-2 focus:ring-[#4f8ef7]/20 shadow-sm"
                     />
-                    {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
+                    {errors.title && <p className="text-sm text-[#ef4444]">{errors.title.message}</p>}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-foreground">Campaign (Optional)</label>
+                    <label className="text-[10px] font-bold text-foreground uppercase tracking-[0.05em]">Campaign (Optional)</label>
                     <select 
                       {...register("campaignId")}
-                      className="w-full h-12 px-4 rounded-xl border border-border/60 bg-background focus:ring-2 focus:ring-primary/20 text-sm appearance-none"
+                      className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#4f8ef7]/20 text-sm appearance-none shadow-sm cursor-pointer"
                     >
                       <option value="">None</option>
                       {campaigns?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -363,64 +429,64 @@ export default function Links() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Custom Slug (Optional)</label>
-                  <div className="flex shadow-sm rounded-xl overflow-hidden border border-border/60 focus-within:ring-2 focus-within:ring-primary/20">
-                    <div className="bg-muted px-4 py-3 text-muted-foreground text-sm font-mono border-r border-border/60 flex items-center justify-center">
+                  <label className="text-[10px] font-bold text-foreground uppercase tracking-[0.05em]">Custom Slug (Optional)</label>
+                  <div className="flex shadow-sm rounded-xl overflow-hidden border border-slate-200 focus-within:ring-2 focus-within:ring-[#4f8ef7]/20 bg-white">
+                    <div className="bg-muted/50 px-4 py-3 text-muted-foreground text-sm font-mono border-r border-slate-200 flex items-center justify-center">
                       linkflow.to/
                     </div>
                     <input 
                       {...register("slug")} 
                       placeholder="custom-name" 
-                      className="flex-1 bg-background px-4 font-mono text-sm focus:outline-none"
+                      className="flex-1 bg-transparent px-4 font-mono text-sm focus:outline-none"
                     />
                   </div>
-                  {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
+                  {errors.slug && <p className="text-sm text-[#ef4444]">{errors.slug.message}</p>}
                 </div>
               </div>
 
               {/* Advanced Section */}
-              <div className="pt-4 border-t border-border/50">
+              <div className="pt-4 border-t border-border">
                 <button 
                   type="button" 
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="w-full flex items-center justify-between text-sm font-semibold text-foreground hover:text-primary transition-colors py-2"
+                  className="w-full flex items-center justify-between text-sm font-bold text-foreground hover:text-[#4f8ef7] transition-colors py-2 cursor-pointer uppercase tracking-wide"
                 >
-                  Advanced Options (UTMs & Expiry)
+                  Advanced Options
                   {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 
                 {showAdvanced && (
-                  <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  <div className="mt-4 space-y-5 animate-in slide-in-from-top-2 duration-200">
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <label className="text-[10px] font-bold text-foreground uppercase tracking-[0.05em] flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                         Expiration Date
                       </label>
                       <Input 
                         type="datetime-local" 
                         {...register("expiresAt")} 
-                        className="rounded-xl h-12 bg-background border-border/60"
+                        className="rounded-xl h-11 bg-white border-slate-200 shadow-sm"
                       />
                     </div>
 
-                    <div className="bg-muted/40 p-4 rounded-xl border border-border/50 space-y-4">
-                      <h4 className="font-semibold text-sm mb-2">UTM Parameters</h4>
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                      <h4 className="font-bold text-sm mb-2 text-foreground font-display">UTM Parameters</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-xs font-medium text-muted-foreground">Source</label>
-                          <Input {...register("utmSource")} placeholder="e.g. google, newsletter" className="h-10 text-sm bg-background" />
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.05em]">Source</label>
+                          <Input {...register("utmSource")} placeholder="e.g. google" className="h-10 text-sm bg-[#f8fafc] border-slate-200" />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-xs font-medium text-muted-foreground">Medium</label>
-                          <Input {...register("utmMedium")} placeholder="e.g. cpc, email" className="h-10 text-sm bg-background" />
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.05em]">Medium</label>
+                          <Input {...register("utmMedium")} placeholder="e.g. cpc" className="h-10 text-sm bg-[#f8fafc] border-slate-200" />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-xs font-medium text-muted-foreground">Campaign</label>
-                          <Input {...register("utmCampaign")} placeholder="e.g. summer_sale" className="h-10 text-sm bg-background" />
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.05em]">Campaign</label>
+                          <Input {...register("utmCampaign")} placeholder="e.g. summer" className="h-10 text-sm bg-[#f8fafc] border-slate-200" />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-xs font-medium text-muted-foreground">Term</label>
-                          <Input {...register("utmTerm")} placeholder="e.g. running+shoes" className="h-10 text-sm bg-background" />
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.05em]">Term</label>
+                          <Input {...register("utmTerm")} placeholder="e.g. running" className="h-10 text-sm bg-[#f8fafc] border-slate-200" />
                         </div>
                       </div>
                     </div>
@@ -430,14 +496,14 @@ export default function Links() {
             </form>
           </div>
 
-          <div className="p-6 bg-background border-t border-border/50 flex justify-end gap-3 flex-shrink-0">
-            <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl">
+          <div className="p-5 bg-white border-t border-border flex justify-end gap-3 flex-shrink-0">
+            <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-semibold cursor-pointer">
               Cancel
             </Button>
             <Button 
               type="submit" 
               form="link-form"
-              className="rounded-xl px-8 bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all hover:-translate-y-0.5"
+              className="rounded-xl px-8 bg-[#4f8ef7] text-white shadow-md hover:shadow-lg hover:bg-[#4f8ef7]/90 transition-all hover:-translate-y-0.5 font-semibold cursor-pointer"
               disabled={createMutation.isPending || updateMutation.isPending}
             >
               {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Link"}
@@ -448,27 +514,27 @@ export default function Links() {
 
       {/* QR Code Modal */}
       <Dialog open={!!qrModalId} onOpenChange={(open) => !open && setQrModalId(null)}>
-        <DialogContent className="sm:max-w-[400px] rounded-3xl p-8 text-center border-0 shadow-2xl">
+        <DialogContent className="sm:max-w-[400px] rounded-3xl p-8 text-center border-0 shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
           <DialogHeader className="mb-6">
-            <DialogTitle className="text-2xl font-display font-bold">QR Code</DialogTitle>
+            <DialogTitle className="text-2xl font-display font-bold text-foreground">QR Code</DialogTitle>
             <DialogDescription>Scan to visit the link</DialogDescription>
           </DialogHeader>
           
-          <div className="bg-white p-6 rounded-2xl border border-border/50 shadow-inner flex flex-col items-center justify-center min-h-[250px] relative">
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center min-h-[250px] relative">
             {loadingQr ? (
               <div className="animate-pulse w-48 h-48 bg-muted rounded-xl"></div>
             ) : qrData ? (
               <>
                 <img src={qrData.svgDataUrl} alt="QR Code" className="w-full max-w-[200px] h-auto" />
-                <p className="mt-4 font-mono text-xs text-muted-foreground bg-muted px-3 py-1 rounded-md">{qrData.shortUrl}</p>
+                <p className="mt-6 font-mono text-xs text-muted-foreground bg-[#f8fafc] px-3 py-1.5 rounded-md border border-slate-100">{qrData.shortUrl}</p>
               </>
             ) : (
-              <p className="text-destructive">Failed to load QR code</p>
+              <p className="text-[#ef4444] font-medium">Failed to load QR code</p>
             )}
           </div>
           
           <Button 
-            className="w-full mt-6 rounded-xl h-12 bg-accent text-accent-foreground hover:bg-accent/90 shadow-md font-bold text-lg"
+            className="w-full mt-6 rounded-xl h-12 bg-[#f97316] text-white hover:bg-[#f97316]/90 shadow-md font-bold text-base cursor-pointer"
             onClick={() => {
               if (qrData) {
                 const a = document.createElement('a');
@@ -485,7 +551,6 @@ export default function Links() {
           </Button>
         </DialogContent>
       </Dialog>
-
     </AppLayout>
   );
 }
