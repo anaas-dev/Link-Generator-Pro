@@ -115,9 +115,12 @@ export interface QrCodeResponse {
 export interface AnalyticsSummary {
   totalLinks: number;
   totalClicks: number;
+  uniqueClicks: number;
   totalCampaigns: number;
   clicksThisMonth: number;
   clicksLastMonth: number;
+  uniqueClicksThisPeriod: number;
+  uniqueClicksLastPeriod: number;
   /** @nullable */
   topCampaign?: string | null;
 }
@@ -141,11 +144,21 @@ export type GetLinksParams = {
   campaignId?: number;
 };
 
+export type GetAnalyticsSummaryParams = {
+  days?: number;
+  startDate?: string;
+  endDate?: string;
+};
+
 export type GetClicksOverTimeParams = {
   campaignId?: number;
   linkId?: number;
+  days?: number;
+  startDate?: string;
+  endDate?: string;
 };
 
 export type GetTopLinksParams = {
   limit?: number;
+  days?: number;
 };

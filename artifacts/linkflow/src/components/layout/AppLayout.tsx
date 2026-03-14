@@ -26,7 +26,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <LinkIcon className="w-5 h-5 text-[#4f8ef7]" strokeWidth={3} />
         </div>
         <span className="text-2xl font-display font-bold tracking-tight text-white">
-          LinkFlow
+          Yas-Links
         </span>
       </div>
 
@@ -56,7 +56,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       </nav>
 
       <div className="mt-auto pt-6 border-none">
-        <div className="flex items-center gap-3 px-2 cursor-pointer group">
+        <div className="flex items-center gap-3 px-2 cursor-pointer group mb-4">
           <div className="w-10 h-10 rounded-full bg-[#1e3a5f] flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
             <span className="font-bold text-sm text-white">JS</span>
           </div>
@@ -64,6 +64,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             <span className="font-medium text-sm text-white truncate">Jane Smith</span>
             <span className="text-xs text-white/50 truncate">jane@example.com</span>
           </div>
+        </div>
+        <div className="px-2 text-center">
+          <span className="text-[11px] text-white/25 tracking-wide">by Soudaysse</span>
         </div>
       </div>
     </div>
@@ -82,7 +85,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="w-8 h-8 rounded bg-white flex items-center justify-center">
             <LinkIcon className="w-4 h-4 text-[#4f8ef7]" strokeWidth={3} />
           </div>
-          <span className="text-xl font-display font-bold text-white">LinkFlow</span>
+          <span className="text-xl font-display font-bold text-white">Yas-Links</span>
         </div>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

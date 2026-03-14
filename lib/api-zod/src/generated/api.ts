@@ -218,21 +218,33 @@ export const GetLinkQrResponse = zod.object({
 /**
  * @summary Get analytics summary
  */
+export const GetAnalyticsSummaryQueryParams = zod.object({
+  days: zod.coerce.number().optional(),
+  startDate: zod.coerce.string().optional(),
+  endDate: zod.coerce.string().optional(),
+});
+
 export const GetAnalyticsSummaryResponse = zod.object({
   totalLinks: zod.number(),
   totalClicks: zod.number(),
+  uniqueClicks: zod.number(),
   totalCampaigns: zod.number(),
   clicksThisMonth: zod.number(),
   clicksLastMonth: zod.number(),
+  uniqueClicksThisPeriod: zod.number(),
+  uniqueClicksLastPeriod: zod.number(),
   topCampaign: zod.string().nullish(),
 });
 
 /**
- * @summary Get clicks over time (last 30 days)
+ * @summary Get clicks over time
  */
 export const GetClicksOverTimeQueryParams = zod.object({
   campaignId: zod.coerce.number().optional(),
   linkId: zod.coerce.number().optional(),
+  days: zod.coerce.number().optional(),
+  startDate: zod.coerce.string().optional(),
+  endDate: zod.coerce.string().optional(),
 });
 
 export const GetClicksOverTimeResponseItem = zod.object({
@@ -248,6 +260,7 @@ export const GetClicksOverTimeResponse = zod.array(
  */
 export const GetTopLinksQueryParams = zod.object({
   limit: zod.coerce.number().optional(),
+  days: zod.coerce.number().optional(),
 });
 
 export const GetTopLinksResponseItem = zod.object({

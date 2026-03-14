@@ -211,18 +211,34 @@ router.get("/r/:slug", async (req, res): Promise<void> => {
     return;
   }
 
-  // Record click
+  // Compute visitor fingerprint (IP + user-agent) for unique click tracking
+  const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "unknown";
+  const ua = req.get("user-agent") || "unknown";
+  const visitorId = `${ip}::${ua}`;
+
+  // Check if this visitor has already clicked this link
+  const [existingClick] = await db
+    .select({ id: clicksTable.id })
+    .from(clicksTable)
+    .where(and(eq(clicksTable.linkId, link.id), eq(clicksTable.visitorId, visitorId)));
+
+  const isNewVisitor = !existingClick;
+
+  // Always record the click event, but track whether it's unique
   await db.insert(clicksTable).values({
     linkId: link.id,
     referrer: req.get("referer") ?? null,
-    userAgent: req.get("user-agent") ?? null,
+    userAgent: ua,
+    visitorId,
   });
 
-  // Update click count
-  await db
-    .update(linksTable)
-    .set({ clickCount: link.clickCount + 1 })
-    .where(eq(linksTable.id, link.id));
+  // Only increment click count for unique visitors
+  if (isNewVisitor) {
+    await db
+      .update(linksTable)
+      .set({ clickCount: link.clickCount + 1 })
+      .where(eq(linksTable.id, link.id));
+  }
 
   // Build the final URL with UTM params appended
   const url = new URL(link.destinationUrl);

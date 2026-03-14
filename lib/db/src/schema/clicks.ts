@@ -7,6 +7,7 @@ export const clicksTable = pgTable("clicks", {
   clickedAt: timestamp("clicked_at", { withTimezone: true }).notNull().defaultNow(),
   referrer: text("referrer"),
   userAgent: text("user_agent"),
+  visitorId: text("visitor_id"),
 });
 
 export type Click = typeof clicksTable.$inferSelect;

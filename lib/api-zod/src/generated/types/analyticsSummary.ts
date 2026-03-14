@@ -9,9 +9,12 @@
 export interface AnalyticsSummary {
   totalLinks: number;
   totalClicks: number;
+  uniqueClicks: number;
   totalCampaigns: number;
   clicksThisMonth: number;
   clicksLastMonth: number;
+  uniqueClicksThisPeriod: number;
+  uniqueClicksLastPeriod: number;
   /** @nullable */
   topCampaign?: string | null;
 }

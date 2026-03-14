@@ -6,7 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GetTopLinksParams = {
-  limit?: number;
+export type GetAnalyticsSummaryParams = {
   days?: number;
+  startDate?: string;
+  endDate?: string;
 };

@@ -3,6 +3,7 @@ import healthRouter from "./health";
 import campaignsRouter from "./campaigns";
 import linksRouter from "./links";
 import analyticsRouter from "./analytics";
+import reportsRouter from "./reports";
 
 const router: IRouter = Router();
 
@@ -10,5 +11,6 @@ router.use(healthRouter);
 router.use(campaignsRouter);
 router.use(linksRouter);
 router.use(analyticsRouter);
+router.use(reportsRouter);
 
 export default router;

@@ -9,4 +9,7 @@
 export type GetClicksOverTimeParams = {
   campaignId?: number;
   linkId?: number;
+  days?: number;
+  startDate?: string;
+  endDate?: string;
 };

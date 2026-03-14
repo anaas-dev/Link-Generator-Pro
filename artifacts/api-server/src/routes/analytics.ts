@@ -1,31 +1,69 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, and, gte, lt } from "drizzle-orm";
+import { eq, sql, and, gte, lt, inArray } from "drizzle-orm";
 import { db, linksTable, campaignsTable, clicksTable } from "@workspace/db";
 import {
   GetClicksOverTimeQueryParams,
   GetTopLinksQueryParams,
+  GetAnalyticsSummaryQueryParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-router.get("/analytics/summary", async (_req, res): Promise<void> => {
+function buildDateRange(days?: number | null, startDate?: string | null, endDate?: string | null): { start: Date; end: Date } {
+  const end = endDate ? new Date(endDate) : new Date();
+  if (startDate) {
+    return { start: new Date(startDate), end };
+  }
+  const d = days ?? 30;
+  const start = new Date(end.getTime() - d * 24 * 60 * 60 * 1000);
+  return { start, end };
+}
+
+router.get("/analytics/summary", async (req, res): Promise<void> => {
+  const params = GetAnalyticsSummaryQueryParams.safeParse(req.query);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const { days, startDate, endDate } = params.data;
+  const { start: periodStart, end: periodEnd } = buildDateRange(days, startDate, endDate);
+  const periodLength = periodEnd.getTime() - periodStart.getTime();
+  const prevPeriodEnd = new Date(periodStart.getTime());
+  const prevPeriodStart = new Date(periodStart.getTime() - periodLength);
+
   const [linkCountRow] = await db.select({ count: sql<number>`count(*)::int` }).from(linksTable);
   const [campaignCountRow] = await db.select({ count: sql<number>`count(*)::int` }).from(campaignsTable);
   const [totalClicksRow] = await db.select({ total: sql<number>`coalesce(sum(click_count), 0)::int` }).from(linksTable);
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  // Unique clicks total (distinct visitor_id across all links)
+  const [uniqueClicksRow] = await db
+    .select({ count: sql<number>`count(distinct ${clicksTable.visitorId})::int` })
+    .from(clicksTable);
 
-  const [clicksThisMonthRow] = await db
+  // Unique clicks this period
+  const [uniqueThisPeriodRow] = await db
+    .select({ count: sql<number>`count(distinct ${clicksTable.visitorId})::int` })
+    .from(clicksTable)
+    .where(and(gte(clicksTable.clickedAt, periodStart), lt(clicksTable.clickedAt, periodEnd)));
+
+  // Unique clicks previous period
+  const [uniquePrevPeriodRow] = await db
+    .select({ count: sql<number>`count(distinct ${clicksTable.visitorId})::int` })
+    .from(clicksTable)
+    .where(and(gte(clicksTable.clickedAt, prevPeriodStart), lt(clicksTable.clickedAt, prevPeriodEnd)));
+
+  // All clicks this period (for comparison bar chart)
+  const [clicksThisPeriodRow] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(clicksTable)
-    .where(gte(clicksTable.clickedAt, startOfMonth));
+    .where(and(gte(clicksTable.clickedAt, periodStart), lt(clicksTable.clickedAt, periodEnd)));
 
-  const [clicksLastMonthRow] = await db
+  // All clicks prev period
+  const [clicksPrevPeriodRow] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(clicksTable)
-    .where(and(gte(clicksTable.clickedAt, startOfLastMonth), lt(clicksTable.clickedAt, startOfMonth)));
+    .where(and(gte(clicksTable.clickedAt, prevPeriodStart), lt(clicksTable.clickedAt, prevPeriodEnd)));
 
   // Top campaign by click count
   const allCampaigns = await db.select().from(campaignsTable);
@@ -45,9 +83,12 @@ router.get("/analytics/summary", async (_req, res): Promise<void> => {
   res.json({
     totalLinks: linkCountRow?.count ?? 0,
     totalClicks: totalClicksRow?.total ?? 0,
+    uniqueClicks: uniqueClicksRow?.count ?? 0,
     totalCampaigns: campaignCountRow?.count ?? 0,
-    clicksThisMonth: clicksThisMonthRow?.count ?? 0,
-    clicksLastMonth: clicksLastMonthRow?.count ?? 0,
+    clicksThisMonth: clicksThisPeriodRow?.count ?? 0,
+    clicksLastMonth: clicksPrevPeriodRow?.count ?? 0,
+    uniqueClicksThisPeriod: uniqueThisPeriodRow?.count ?? 0,
+    uniqueClicksLastPeriod: uniquePrevPeriodRow?.count ?? 0,
     topCampaign,
   });
 });
@@ -59,19 +100,19 @@ router.get("/analytics/clicks", async (req, res): Promise<void> => {
     return;
   }
 
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const { days, startDate, endDate } = params.data as any;
+  const { start, end } = buildDateRange(days, startDate, endDate);
 
-  let whereClause = gte(clicksTable.clickedAt, thirtyDaysAgo);
+  const dateFilter = and(gte(clicksTable.clickedAt, start), lt(clicksTable.clickedAt, end));
 
   if (params.data.linkId) {
     const results = await db
       .select({
         date: sql<string>`date_trunc('day', ${clicksTable.clickedAt})::date::text`,
-        clicks: sql<number>`count(*)::int`,
+        clicks: sql<number>`count(distinct ${clicksTable.visitorId})::int`,
       })
       .from(clicksTable)
-      .where(and(whereClause, eq(clicksTable.linkId, params.data.linkId)))
+      .where(and(dateFilter, eq(clicksTable.linkId, params.data.linkId)))
       .groupBy(sql`date_trunc('day', ${clicksTable.clickedAt})`)
       .orderBy(sql`date_trunc('day', ${clicksTable.clickedAt})`);
     res.json(results);
@@ -90,15 +131,10 @@ router.get("/analytics/clicks", async (req, res): Promise<void> => {
     const results = await db
       .select({
         date: sql<string>`date_trunc('day', ${clicksTable.clickedAt})::date::text`,
-        clicks: sql<number>`count(*)::int`,
+        clicks: sql<number>`count(distinct ${clicksTable.visitorId})::int`,
       })
       .from(clicksTable)
-      .where(
-        and(
-          whereClause,
-          sql`${clicksTable.linkId} = ANY(ARRAY[${sql.raw(linkIds.join(","))}]::int[])`
-        )
-      )
+      .where(and(dateFilter, inArray(clicksTable.linkId, linkIds)))
       .groupBy(sql`date_trunc('day', ${clicksTable.clickedAt})`)
       .orderBy(sql`date_trunc('day', ${clicksTable.clickedAt})`);
 
@@ -109,10 +145,10 @@ router.get("/analytics/clicks", async (req, res): Promise<void> => {
   const results = await db
     .select({
       date: sql<string>`date_trunc('day', ${clicksTable.clickedAt})::date::text`,
-      clicks: sql<number>`count(*)::int`,
+      clicks: sql<number>`count(distinct ${clicksTable.visitorId})::int`,
     })
     .from(clicksTable)
-    .where(whereClause)
+    .where(dateFilter)
     .groupBy(sql`date_trunc('day', ${clicksTable.clickedAt})`)
     .orderBy(sql`date_trunc('day', ${clicksTable.clickedAt})`);
 

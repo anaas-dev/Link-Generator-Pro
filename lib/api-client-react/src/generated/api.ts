@@ -23,6 +23,7 @@ import type {
   CreateCampaignBody,
   CreateLinkBody,
   ErrorResponse,
+  GetAnalyticsSummaryParams,
   GetClicksOverTimeParams,
   GetLinksParams,
   GetTopLinksParams,
@@ -1054,41 +1055,63 @@ export function useGetLinkQr<
 /**
  * @summary Get analytics summary
  */
-export const getGetAnalyticsSummaryUrl = () => {
-  return `/api/analytics/summary`;
+export const getGetAnalyticsSummaryUrl = (
+  params?: GetAnalyticsSummaryParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/analytics/summary?${stringifiedParams}`
+    : `/api/analytics/summary`;
 };
 
 export const getAnalyticsSummary = async (
+  params?: GetAnalyticsSummaryParams,
   options?: RequestInit,
 ): Promise<AnalyticsSummary> => {
-  return customFetch<AnalyticsSummary>(getGetAnalyticsSummaryUrl(), {
+  return customFetch<AnalyticsSummary>(getGetAnalyticsSummaryUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetAnalyticsSummaryQueryKey = () => {
-  return [`/api/analytics/summary`] as const;
+export const getGetAnalyticsSummaryQueryKey = (
+  params?: GetAnalyticsSummaryParams,
+) => {
+  return [`/api/analytics/summary`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetAnalyticsSummaryQueryOptions = <
   TData = Awaited<ReturnType<typeof getAnalyticsSummary>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getAnalyticsSummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetAnalyticsSummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAnalyticsSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetAnalyticsSummaryQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getGetAnalyticsSummaryQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getAnalyticsSummary>>
-  > = ({ signal }) => getAnalyticsSummary({ signal, ...requestOptions });
+  > = ({ signal }) =>
+    getAnalyticsSummary(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getAnalyticsSummary>>,
@@ -1109,15 +1132,18 @@ export type GetAnalyticsSummaryQueryError = ErrorType<unknown>;
 export function useGetAnalyticsSummary<
   TData = Awaited<ReturnType<typeof getAnalyticsSummary>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getAnalyticsSummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetAnalyticsSummaryQueryOptions(options);
+>(
+  params?: GetAnalyticsSummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAnalyticsSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAnalyticsSummaryQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -1127,7 +1153,7 @@ export function useGetAnalyticsSummary<
 }
 
 /**
- * @summary Get clicks over time (last 30 days)
+ * @summary Get clicks over time
  */
 export const getGetClicksOverTimeUrl = (params?: GetClicksOverTimeParams) => {
   const normalizedParams = new URLSearchParams();
@@ -1197,7 +1223,7 @@ export type GetClicksOverTimeQueryResult = NonNullable<
 export type GetClicksOverTimeQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get clicks over time (last 30 days)
+ * @summary Get clicks over time
  */
 
 export function useGetClicksOverTime<

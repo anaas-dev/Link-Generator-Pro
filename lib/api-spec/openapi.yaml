@@ -288,6 +288,22 @@ paths:
       operationId: getAnalyticsSummary
       tags: [analytics]
       summary: Get analytics summary
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: Analytics summary
@@ -300,7 +316,7 @@ paths:
     get:
       operationId: getClicksOverTime
       tags: [analytics]
-      summary: Get clicks over time (last 30 days)
+      summary: Get clicks over time
       parameters:
         - name: campaignId
           in: query
@@ -312,6 +328,21 @@ paths:
           required: false
           schema:
             type: integer
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: Click data points
@@ -329,6 +360,11 @@ paths:
       summary: Get top performing links
       parameters:
         - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: days
           in: query
           required: false
           schema:
@@ -560,20 +596,29 @@ components:
           type: integer
         totalClicks:
           type: integer
+        uniqueClicks:
+          type: integer
         totalCampaigns:
           type: integer
         clicksThisMonth:
           type: integer
         clicksLastMonth:
           type: integer
+        uniqueClicksThisPeriod:
+          type: integer
+        uniqueClicksLastPeriod:
+          type: integer
         topCampaign:
           type: ["string", "null"]
       required:
         - totalLinks
         - totalClicks
+        - uniqueClicks
         - totalCampaigns
         - clicksThisMonth
         - clicksLastMonth
+        - uniqueClicksThisPeriod
+        - uniqueClicksLastPeriod
 
     ClickDataPoint:
       type: object

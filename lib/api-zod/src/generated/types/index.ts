@@ -12,6 +12,7 @@ export * from "./clickDataPoint";
 export * from "./createCampaignBody";
 export * from "./createLinkBody";
 export * from "./errorResponse";
+export * from "./getAnalyticsSummaryParams";
 export * from "./getClicksOverTimeParams";
 export * from "./getLinksParams";
 export * from "./getTopLinksParams";
