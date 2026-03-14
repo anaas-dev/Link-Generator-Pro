@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "LinkFlow"
+version = "1.0.0"
+id = "artifacts/linkflow"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 25031
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/linkflow run dev"
+
+[services.env]
+PORT = "25031"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/linkflow", "run", "build"]
+publicDir = "artifacts/linkflow/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

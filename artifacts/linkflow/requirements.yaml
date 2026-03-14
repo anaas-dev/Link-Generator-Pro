@@ -1,0 +1,14 @@
+packages:
+  "recharts": "For analytics dashboard line charts"
+  "framer-motion": "For page transitions, micro-interactions, and animations"
+  "date-fns": "For formatting expiration and creation dates"
+  "react-hook-form": "For complex form state management"
+  "@hookform/resolvers": "For Zod schema validation in forms"
+  "zod": "For defining form validation schemas"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility for merging tailwind classes safely"
+images: []
+notes:
+  - "Importing all data fetching hooks directly from @workspace/api-client-react as specified in the context"
+  - "Constructing short link URLs dynamically using window.location.origin"
+  - "Using strict HSL color scheme with Deep Navy and Sun Yellow accent"
