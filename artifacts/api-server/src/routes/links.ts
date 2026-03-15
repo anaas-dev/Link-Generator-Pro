@@ -196,8 +196,9 @@ router.get("/links/:id/qr", async (req, res): Promise<void> => {
 
   const svgDataUrl = await QRCode.toDataURL(shortUrl, {
     type: "image/png",
-    width: 300,
+    width: 400,
     margin: 2,
+    errorCorrectionLevel: "H",
     color: {
       dark: "#0f2044",
       light: "#ffffff",

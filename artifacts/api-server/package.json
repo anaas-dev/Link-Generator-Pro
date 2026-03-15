@@ -19,6 +19,7 @@
     "drizzle-orm": "catalog:",
     "express": "^5",
     "express-session": "^1.19.0",
+    "jimp": "^1.6.0",
     "nanoid": "^5.1.6",
     "qrcode": "^1.5.4"
   },

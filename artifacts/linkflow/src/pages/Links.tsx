@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   useGetLinks, 
   useCreateLink, 
@@ -63,10 +63,54 @@ export default function Links() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [qrModalId, setQrModalId] = useState<number | null>(null);
+  const [qrLogo, setQrLogo] = useState<string | null>(null);
+  const [compositeQrUrl, setCompositeQrUrl] = useState<string | null>(null);
+  const qrLogoInputRef = useRef<HTMLInputElement>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const { data: qrData, isLoading: loadingQr } = useGetLinkQr(qrModalId as number, { query: { enabled: !!qrModalId } });
+
+  // Composite QR + logo using Canvas API
+  useEffect(() => {
+    if (!qrData?.svgDataUrl || !qrLogo) {
+      setCompositeQrUrl(null);
+      return;
+    }
+    const qrImg = new Image();
+    const logoImg = new Image();
+    let cancelled = false;
+    const doComposite = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = qrImg.naturalWidth || 300;
+      canvas.height = qrImg.naturalHeight || 300;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(qrImg, 0, 0, canvas.width, canvas.height);
+      const logoSize = Math.floor(canvas.width * 0.25);
+      const pad = Math.floor(logoSize * 0.12);
+      const x = Math.floor((canvas.width - logoSize) / 2);
+      const y = Math.floor((canvas.height - logoSize) / 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      const r = 6;
+      ctx.roundRect(x - pad, y - pad, logoSize + pad * 2, logoSize + pad * 2, r);
+      ctx.fill();
+      ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+      if (!cancelled) setCompositeQrUrl(canvas.toDataURL("image/png"));
+    };
+    let loadedCount = 0;
+    const onLoad = () => { loadedCount++; if (loadedCount === 2) doComposite(); };
+    qrImg.onload = onLoad;
+    logoImg.onload = onLoad;
+    qrImg.src = qrData.svgDataUrl;
+    logoImg.src = qrLogo;
+    return () => { cancelled = true; };
+  }, [qrData?.svgDataUrl, qrLogo]);
+
+  // Reset logo when QR modal closes
+  useEffect(() => {
+    if (!qrModalId) { setQrLogo(null); setCompositeQrUrl(null); }
+  }, [qrModalId]);
 
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<LinkFormData>({
     resolver: zodResolver(linkSchema),
@@ -531,8 +575,47 @@ export default function Links() {
               <div className="animate-pulse w-48 h-48 bg-muted rounded-xl"></div>
             ) : qrData ? (
               <>
-                <img src={qrData.svgDataUrl} alt="QR Code" className="w-full max-w-[200px] h-auto" />
-                <p className="mt-6 font-mono text-xs text-muted-foreground bg-[#f8fafc] px-3 py-1.5 rounded-md border border-slate-100">{qrData.shortUrl}</p>
+                <img
+                  src={compositeQrUrl ?? qrData.svgDataUrl}
+                  alt="QR Code"
+                  className="w-full max-w-[200px] h-auto"
+                />
+                <p className="mt-4 font-mono text-xs text-muted-foreground bg-[#f8fafc] px-3 py-1.5 rounded-md border border-slate-100">{qrData.shortUrl}</p>
+
+                {/* Logo upload controls */}
+                <div className="mt-4 flex items-center gap-2">
+                  <input
+                    ref={qrLogoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setQrLogo(ev.target?.result as string);
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  {qrLogo ? (
+                    <div className="flex items-center gap-2">
+                      <img src={qrLogo} alt="Logo" className="w-7 h-7 rounded object-contain border border-slate-200" />
+                      <button
+                        onClick={() => { setQrLogo(null); if (qrLogoInputRef.current) qrLogoInputRef.current.value = ""; }}
+                        className="text-xs text-muted-foreground hover:text-[#ef4444] underline cursor-pointer transition-colors"
+                      >
+                        Remove logo
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => qrLogoInputRef.current?.click()}
+                      className="text-xs text-[#4f8ef7] hover:text-[#3a7ae8] underline cursor-pointer transition-colors flex items-center gap-1"
+                    >
+                      + Add logo to center
+                    </button>
+                  )}
+                </div>
               </>
             ) : (
               <p className="text-[#ef4444] font-medium">Failed to load QR code</p>
@@ -542,10 +625,11 @@ export default function Links() {
           <Button 
             className="w-full mt-6 rounded-xl h-12 bg-[#f97316] text-white hover:bg-[#f97316]/90 shadow-md font-bold text-base cursor-pointer"
             onClick={() => {
-              if (qrData) {
+              const url = compositeQrUrl ?? qrData?.svgDataUrl;
+              if (url) {
                 const a = document.createElement('a');
-                a.href = qrData.svgDataUrl;
-                a.download = `qrcode-${qrModalId}.svg`;
+                a.href = url;
+                a.download = `qrcode-${qrModalId}.png`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -553,7 +637,7 @@ export default function Links() {
             }}
             disabled={!qrData}
           >
-            Download SVG
+            Download PNG
           </Button>
         </DialogContent>
       </Dialog>
