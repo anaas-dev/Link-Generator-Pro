@@ -32,7 +32,7 @@ interface TeamUser {
 }
 
 export default function Settings() {
-  const { data: currentUser } = useAuth();
+  const { data: currentUser, isLoading: authLoading, isFetching: authFetching } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
@@ -67,6 +67,16 @@ export default function Settings() {
     },
     onError: (e: Error) => toast({ title: e.message, variant: "destructive" }),
   });
+
+  if (authLoading || (authFetching && currentUser?.isAdmin == null)) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-4">
+          <div className="w-8 h-8 rounded-full border-2 border-[#4f8ef7] border-t-transparent animate-spin" />
+        </div>
+      </AppLayout>
+    );
+  }
 
   if (!currentUser?.isAdmin) {
     return (
