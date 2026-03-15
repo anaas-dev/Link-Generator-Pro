@@ -34,6 +34,7 @@ export default function Login() {
               <label className="text-xs font-bold text-foreground uppercase tracking-[0.05em]">Email</label>
               <input
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -47,6 +48,7 @@ export default function Login() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required

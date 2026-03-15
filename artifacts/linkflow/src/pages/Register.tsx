@@ -35,6 +35,7 @@ export default function Register() {
               <label className="text-xs font-bold text-foreground uppercase tracking-[0.05em]">Full Name</label>
               <input
                 type="text"
+                autoComplete="name"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 required
@@ -47,6 +48,7 @@ export default function Register() {
               <label className="text-xs font-bold text-foreground uppercase tracking-[0.05em]">Email</label>
               <input
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -60,6 +62,7 @@ export default function Register() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
