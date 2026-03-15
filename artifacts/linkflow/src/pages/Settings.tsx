@@ -84,8 +84,8 @@ export default function Settings() {
     <AppLayout>
       <div className="max-w-3xl mx-auto space-y-8">
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground tracking-tight">Team Settings</h1>
-          <p className="text-muted-foreground mt-1">Manage team member accounts and access.</p>
+          <h1 className="text-3xl font-display font-bold text-foreground tracking-tight">Team Management</h1>
+          <p className="text-muted-foreground mt-1">Create and manage team member accounts and access.</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">

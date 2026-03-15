@@ -190,11 +190,9 @@ router.get("/links/:id/qr", async (req, res): Promise<void> => {
     return;
   }
 
-  const host = req.get("host") || "localhost";
-  const protocol = req.get("x-forwarded-proto") || req.protocol || "https";
-  const shortUrl = `${protocol}://${host}/r/${link.slug}`;
+  const brandedUrl = `https://yas-link.to/${link.slug}`;
 
-  const svgDataUrl = await QRCode.toDataURL(shortUrl, {
+  const svgDataUrl = await QRCode.toDataURL(brandedUrl, {
     type: "image/png",
     width: 400,
     margin: 2,
@@ -205,7 +203,7 @@ router.get("/links/:id/qr", async (req, res): Promise<void> => {
     },
   });
 
-  res.json({ svgDataUrl, shortUrl });
+  res.json({ svgDataUrl, shortUrl: brandedUrl });
 });
 
 // Redirect route — must be registered here too so /api/r/:slug works
