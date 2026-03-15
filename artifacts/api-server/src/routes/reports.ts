@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, and, gte, lt, inArray } from "drizzle-orm";
+import { eq, sql, and, gte, lt } from "drizzle-orm";
 import { db, linksTable, campaignsTable, clicksTable } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -14,17 +14,32 @@ function buildDateRange(days?: string, startDate?: string, endDate?: string): { 
   return { start, end };
 }
 
+function escape(v: string | number | null | undefined): string {
+  if (v == null) return "";
+  const s = String(v);
+  if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
 function rowsToCsv(headers: string[], rows: (string | number | null | undefined)[][]): string {
-  const escape = (v: string | number | null | undefined): string => {
-    if (v == null) return "";
-    const s = String(v);
-    if (s.includes(",") || s.includes('"') || s.includes("\n")) {
-      return `"${s.replace(/"/g, '""')}"`;
-    }
-    return s;
-  };
   const lines = [headers.join(","), ...rows.map((r) => r.map(escape).join(","))];
   return lines.join("\n");
+}
+
+async function getLinkStats(linkId: number, start: Date, end: Date): Promise<{ total: number; unique: number }> {
+  const [totalRow] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(clicksTable)
+    .where(and(eq(clicksTable.linkId, linkId), gte(clicksTable.clickedAt, start), lt(clicksTable.clickedAt, end)));
+
+  const [uniqueRow] = await db
+    .select({ count: sql<number>`count(distinct ${clicksTable.visitorId})::int` })
+    .from(clicksTable)
+    .where(and(eq(clicksTable.linkId, linkId), gte(clicksTable.clickedAt, start), lt(clicksTable.clickedAt, end)));
+
+  return { total: totalRow?.total ?? 0, unique: uniqueRow?.count ?? 0 };
 }
 
 // Report for a single campaign
@@ -49,45 +64,63 @@ router.get("/reports/campaign/:id", async (req, res): Promise<void> => {
 
   const links = await db.select().from(linksTable).where(eq(linksTable.campaignId, id));
 
-  const rows: (string | number | null)[][] = [];
+  let campaignTotalClicks = 0;
+  let campaignUniqueClicks = 0;
+
+  const linkRows: (string | number | null)[][] = [];
 
   for (const link of links) {
-    const [totalRow] = await db
-      .select({ total: sql<number>`count(*)::int` })
-      .from(clicksTable)
-      .where(and(eq(clicksTable.linkId, link.id), gte(clicksTable.clickedAt, start), lt(clicksTable.clickedAt, end)));
+    const stats = await getLinkStats(link.id, start, end);
+    campaignTotalClicks += stats.total;
+    campaignUniqueClicks += stats.unique;
 
-    const [uniqueRow] = await db
-      .select({ count: sql<number>`count(distinct ${clicksTable.visitorId})::int` })
-      .from(clicksTable)
-      .where(and(eq(clicksTable.linkId, link.id), gte(clicksTable.clickedAt, start), lt(clicksTable.clickedAt, end)));
+    const shortUrl = `${req.protocol}://${req.get("host")}/api/r/${link.slug}`;
 
-    rows.push([
-      link.id,
+    linkRows.push([
       link.title,
-      link.slug,
+      shortUrl,
       link.destinationUrl,
       link.isActive ? "Active" : "Paused",
       link.utmSource ?? "",
       link.utmMedium ?? "",
       link.utmCampaign ?? "",
-      totalRow?.total ?? 0,
-      uniqueRow?.count ?? 0,
+      stats.total,
+      stats.unique,
       link.createdAt ? link.createdAt.toISOString().split("T")[0] : "",
     ]);
   }
 
-  const headers = [
-    "Link ID", "Title", "Slug", "Destination URL", "Status",
+  const periodLabel = `${start.toISOString().split("T")[0]} to ${end.toISOString().split("T")[0]}`;
+
+  const summaryRows: (string | number | null)[][] = [
+    ["Campaign Name", campaign.name],
+    ["Campaign Status", "Active"],
+    ["Report Period", periodLabel],
+    ["Number of Links", links.length],
+    ["Total Clicks", campaignTotalClicks],
+    ["Unique Clicks", campaignUniqueClicks],
+    ["Created At", campaign.createdAt ? campaign.createdAt.toISOString().split("T")[0] : ""],
+    [],
+    ["--- LINK DETAILS ---"],
+  ];
+
+  const linkHeaders = [
+    "Link Name", "Short URL", "Destination URL", "Status",
     "UTM Source", "UTM Medium", "UTM Campaign",
     "Total Clicks", "Unique Clicks", "Created At"
   ];
-  const csv = rowsToCsv(headers, rows);
-  const filename = `yas-links-campaign-${campaign.name.replace(/[^a-z0-9]/gi, "-").toLowerCase()}-report.csv`;
 
+  const csvParts: string[] = [];
+  csvParts.push("CAMPAIGN SUMMARY");
+  csvParts.push(summaryRows.map(r => r.map(escape).join(",")).join("\n"));
+  csvParts.push("");
+  csvParts.push("LINK DETAILS");
+  csvParts.push(rowsToCsv(linkHeaders, linkRows));
+
+  const filename = `yas-links-campaign-${campaign.name.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.csv`;
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-  res.send(csv);
+  res.send(csvParts.join("\n"));
 });
 
 // Global report for all campaigns and uncategorized links
@@ -100,47 +133,64 @@ router.get("/reports/all", async (req, res): Promise<void> => {
 
   const allLinks = await db.select().from(linksTable).orderBy(linksTable.campaignId, linksTable.createdAt);
   const allCampaigns = await db.select().from(campaignsTable);
-  const campaignMap = new Map(allCampaigns.map((c) => [c.id, c.name]));
+  const campaignMap = new Map(allCampaigns.map((c) => [c.id, c]));
 
+  const periodLabel = `${start.toISOString().split("T")[0]} to ${end.toISOString().split("T")[0]}`;
+
+  let grandTotal = 0;
+  let grandUnique = 0;
   const rows: (string | number | null)[][] = [];
 
   for (const link of allLinks) {
-    const [totalRow] = await db
-      .select({ total: sql<number>`count(*)::int` })
-      .from(clicksTable)
-      .where(and(eq(clicksTable.linkId, link.id), gte(clicksTable.clickedAt, start), lt(clicksTable.clickedAt, end)));
+    const stats = await getLinkStats(link.id, start, end);
+    grandTotal += stats.total;
+    grandUnique += stats.unique;
 
-    const [uniqueRow] = await db
-      .select({ count: sql<number>`count(distinct ${clicksTable.visitorId})::int` })
-      .from(clicksTable)
-      .where(and(eq(clicksTable.linkId, link.id), gte(clicksTable.clickedAt, start), lt(clicksTable.clickedAt, end)));
+    const campaign = link.campaignId ? campaignMap.get(link.campaignId) : null;
+    const shortUrl = `${req.protocol}://${req.get("host")}/api/r/${link.slug}`;
 
     rows.push([
-      link.id,
-      link.campaignId ? campaignMap.get(link.campaignId) ?? "Unknown" : "No Campaign",
       link.title,
-      link.slug,
+      shortUrl,
       link.destinationUrl,
+      campaign?.name ?? "No Campaign",
       link.isActive ? "Active" : "Paused",
       link.utmSource ?? "",
       link.utmMedium ?? "",
       link.utmCampaign ?? "",
-      totalRow?.total ?? 0,
-      uniqueRow?.count ?? 0,
+      stats.total,
+      stats.unique,
       link.createdAt ? link.createdAt.toISOString().split("T")[0] : "",
     ]);
   }
 
-  const headers = [
-    "Link ID", "Campaign", "Title", "Slug", "Destination URL", "Status",
-    "UTM Source", "UTM Medium", "UTM Campaign",
+  const summaryRows: (string | number | null)[][] = [
+    ["Report Name", "Yas-Links Full Report"],
+    ["Report Period", periodLabel],
+    ["Total Links", allLinks.length],
+    ["Total Campaigns", allCampaigns.length],
+    ["Grand Total Clicks", grandTotal],
+    ["Grand Unique Clicks", grandUnique],
+    [],
+    ["--- LINK DETAILS ---"],
+  ];
+
+  const linkHeaders = [
+    "Link Name", "Short URL", "Destination URL", "Campaign",
+    "Status", "UTM Source", "UTM Medium", "UTM Campaign",
     "Total Clicks", "Unique Clicks", "Created At"
   ];
-  const csv = rowsToCsv(headers, rows);
+
+  const csvParts: string[] = [];
+  csvParts.push("YAS-LINKS FULL REPORT");
+  csvParts.push(summaryRows.map(r => r.map(escape).join(",")).join("\n"));
+  csvParts.push("");
+  csvParts.push("LINK DETAILS");
+  csvParts.push(rowsToCsv(linkHeaders, rows));
 
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", `attachment; filename="yas-links-full-report.csv"`);
-  res.send(csv);
+  res.send(csvParts.join("\n"));
 });
 
 export default router;

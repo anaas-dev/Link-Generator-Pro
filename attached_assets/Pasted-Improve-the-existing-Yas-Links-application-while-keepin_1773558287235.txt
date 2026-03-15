@@ -1,0 +1,119 @@
+Improve the existing Yas-Links application while keeping the current UI and design exactly the same. Do not redesign the interface. Focus only on functionality improvements, bug fixes, and missing core features.
+
+1. Authentication System (Login / Account Access)
+Currently it is not clear how users will log in to the platform once it is published.
+
+Implement a proper authentication system including:
+- Login page
+- Account creation (sign up)
+- Email and password authentication
+- Logout functionality
+- Session management
+
+Users must be able to:
+- create an account
+- log in with email and password
+- access their dashboard after login
+
+Also explain clearly in the README how users will connect to the platform once it is deployed.
+
+2. Click Tracking Improvements
+Currently the system does not clearly distinguish between click types.
+
+Update analytics so each link shows:
+- Total Clicks (all clicks)
+- Unique Clicks (only the first click per user)
+
+Unique clicks should be calculated using IP address + cookie or another reliable method to prevent counting the same user multiple times.
+
+3. Fix Short Link Generation
+The short link feature is not working correctly.
+
+Problems observed:
+- Links remain long even when a custom slug is entered
+- The system does not produce true short URLs
+
+Fix the short link system so that:
+- Users can generate real short links
+- Users can choose their own custom slug
+- Example format:
+  domain.com/ramadan
+  domain.com/promo
+  domain.com/tiktok
+
+Ensure that when someone clicks a short link:
+1. The click is tracked
+2. Analytics are recorded
+3. The user is redirected to the destination URL.
+
+4. Reporting Improvements (CSV Export)
+The current CSV reports are poorly structured and difficult to understand.
+
+Create a clean and organized reporting format including essential marketing data.
+
+Campaign Report should include:
+- Campaign Name
+- Campaign Start Date
+- Campaign Status
+- Number of Links in Campaign
+- Total Clicks
+- Unique Clicks
+- Short Links used
+
+Link Report should include:
+- Link Name
+- Short Link URL
+- Destination URL
+- Campaign Name
+- Total Clicks
+- Unique Clicks
+- Creation Date
+
+Reports should be:
+- structured in clear columns
+- easy to read
+- clean for marketing reporting
+- downloadable as CSV.
+
+5. Dashboard Improvements
+Update dashboard analytics so users can clearly see:
+- Total Clicks
+- Unique Clicks
+- Performance per campaign
+- Performance per link
+
+Both click metrics must always be visible.
+
+6. Data Filters
+Improve analytics filtering options:
+- Last 30 days
+- Last 60 days
+- Last 90 days
+- Custom date range
+
+Filters should apply to:
+- dashboard analytics
+- campaign analytics
+- exported reports.
+
+7. Stability and Performance
+Ensure:
+- short links always resolve correctly
+- click tracking works reliably
+- no duplicate data corruption
+- the platform performs efficiently.
+
+8. Branding
+Ensure the platform name appears as **Yas-Links** everywhere.
+Keep the footer credit:
+"by Soudaysse".
+
+9. Additional Improvements
+If there are other logical improvements for a marketing link tracking platform, suggest and implement them. Focus on:
+- clearer analytics
+- better reporting
+- reliable link management
+- accurate tracking.
+
+IMPORTANT:
+Do not modify the existing UI design, layout, or color scheme. Only improve functionality, analytics, authentication, and reporting.

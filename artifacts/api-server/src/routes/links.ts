@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, isNull, isNotNull, sql } from "drizzle-orm";
 import { db, linksTable, campaignsTable, clicksTable } from "@workspace/db";
 import QRCode from "qrcode";
 import {
@@ -21,6 +21,20 @@ async function enrichLink(link: typeof linksTable.$inferSelect) {
     const [c] = await db.select().from(campaignsTable).where(eq(campaignsTable.id, link.campaignId));
     campaignName = c?.name ?? null;
   }
+
+  const [totalRow] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(clicksTable)
+    .where(eq(clicksTable.linkId, link.id));
+
+  const [uniqueRow] = await db
+    .select({ count: sql<number>`count(distinct ${clicksTable.visitorId})::int` })
+    .from(clicksTable)
+    .where(eq(clicksTable.linkId, link.id));
+
+  const trackedTotal = totalRow?.total ?? 0;
+  const trackedUnique = uniqueRow?.count ?? 0;
+
   return {
     ...link,
     campaignId: link.campaignId ?? null,
@@ -31,6 +45,8 @@ async function enrichLink(link: typeof linksTable.$inferSelect) {
     utmTerm: link.utmTerm ?? null,
     utmContent: link.utmContent ?? null,
     expiresAt: link.expiresAt ? link.expiresAt.toISOString() : null,
+    totalClicks: trackedTotal,
+    uniqueClicks: trackedUnique,
   };
 }
 

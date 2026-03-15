@@ -219,7 +219,7 @@ export default function Links() {
               <tr className="bg-white/95 backdrop-blur sticky top-0 border-b border-border text-[11px] font-bold text-muted-foreground uppercase tracking-[0.05em]">
                 <th className="px-6 py-4">Link Details</th>
                 <th className="px-6 py-4 hidden md:table-cell">Campaign</th>
-                <th className="px-6 py-4 text-right">Clicks</th>
+                <th className="px-6 py-4 text-right">Total / Unique</th>
                 <th className="px-6 py-4 text-center">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -280,10 +280,16 @@ export default function Links() {
                           <span className="text-muted-foreground text-sm italic">None</span>
                         )}
                       </td>
-                      <td className="px-6 py-5 text-right font-display font-bold text-lg text-[#f97316]">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {link.clickCount.toLocaleString()}
-                          <MousePointerClick className="w-4 h-4 opacity-50" />
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex flex-col items-end gap-0.5">
+                          <div className="flex items-center gap-1 text-sm font-bold text-[#f97316]">
+                            {((link as any).totalClicks ?? link.clickCount).toLocaleString()}
+                            <MousePointerClick className="w-3.5 h-3.5 opacity-50" />
+                          </div>
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#4f8ef7] inline-block"></span>
+                            {((link as any).uniqueClicks ?? link.clickCount).toLocaleString()} unique
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-5 text-center">
