@@ -6,8 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/Dashboard";
 import Campaigns from "@/pages/Campaigns";
 import Links from "@/pages/Links";
+import Settings from "@/pages/Settings";
 import Login from "@/pages/Login";
-import Register from "@/pages/Register";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -63,7 +63,7 @@ function Router() {
         <PublicRoute component={Login} />
       </Route>
       <Route path="/register">
-        <PublicRoute component={Register} />
+        <Redirect to="/login" />
       </Route>
       <Route path="/">
         <ProtectedRoute component={Dashboard} />
@@ -73,6 +73,9 @@ function Router() {
       </Route>
       <Route path="/links">
         <ProtectedRoute component={Links} />
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute component={Settings} />
       </Route>
       <Route component={NotFound} />
     </Switch>

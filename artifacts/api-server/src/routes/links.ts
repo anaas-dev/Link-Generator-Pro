@@ -192,7 +192,7 @@ router.get("/links/:id/qr", async (req, res): Promise<void> => {
 
   const host = req.get("host") || "localhost";
   const protocol = req.get("x-forwarded-proto") || req.protocol || "https";
-  const shortUrl = `${protocol}://${host}/api/r/${link.slug}`;
+  const shortUrl = `${protocol}://${host}/r/${link.slug}`;
 
   const svgDataUrl = await QRCode.toDataURL(shortUrl, {
     type: "image/png",

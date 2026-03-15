@@ -5,9 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function generateShortUrl(slug: string) {
+export function generateShortUrl(_slug: string) {
+  return `yas-link.to/${_slug}`;
+}
+
+export function getWorkingShortUrl(slug: string) {
   if (typeof window !== "undefined") {
-    return `${window.location.origin}/api/r/${slug}`;
+    return `${window.location.origin}/r/${slug}`;
   }
-  return `/api/r/${slug}`;
+  return `/r/${slug}`;
 }

@@ -5,6 +5,7 @@ import linksRouter from "./links";
 import analyticsRouter from "./analytics";
 import reportsRouter from "./reports";
 import authRouter from "./auth";
+import adminRouter from "./admin";
 import { requireAuth } from "../middleware/requireAuth";
 
 const router: IRouter = Router();
@@ -16,5 +17,6 @@ router.use(campaignsRouter);
 router.use(linksRouter);
 router.use(analyticsRouter);
 router.use(reportsRouter);
+router.use(adminRouter);
 
 export default router;

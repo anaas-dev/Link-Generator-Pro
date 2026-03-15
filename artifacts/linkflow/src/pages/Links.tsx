@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, isPast } from "date-fns";
-import { generateShortUrl, cn } from "@/lib/utils";
+import { generateShortUrl, getWorkingShortUrl, cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -152,7 +152,7 @@ export default function Links() {
   };
 
   const handleCopy = (slug: string, id: number) => {
-    const url = generateShortUrl(slug);
+    const url = getWorkingShortUrl(slug);
     navigator.clipboard.writeText(url);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);

@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Megaphone, Link as LinkIcon, Menu, X, LogOut } from "lucide-react";
+import { LayoutDashboard, Megaphone, Link as LinkIcon, Menu, X, LogOut, Settings } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -16,11 +16,14 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { data: user } = useAuth();
   const logout = useLogout();
 
-  const navItems = [
+  const baseNavItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Campaigns", href: "/campaigns", icon: Megaphone },
     { name: "Links", href: "/links", icon: LinkIcon },
   ];
+  const navItems = user?.isAdmin
+    ? [...baseNavItems, { name: "Settings", href: "/settings", icon: Settings }]
+    : baseNavItems;
 
   const initials = user?.name
     ? user.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()

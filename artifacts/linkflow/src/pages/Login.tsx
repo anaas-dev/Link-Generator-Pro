@@ -83,13 +83,6 @@ export default function Login() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-[#4f8ef7] font-semibold hover:underline">
-            Create one
-          </Link>
-        </p>
-
         <p className="text-center text-xs text-muted-foreground/50 mt-8">by Soudaysse</p>
       </div>
     </div>
