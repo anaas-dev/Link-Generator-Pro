@@ -8,7 +8,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Plus, MoreVertical, Trash2, Edit2, Megaphone, FolderKanban } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Edit2, Megaphone, FolderKanban, Download } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,10 +34,18 @@ const PRESET_COLORS = [
   "#4f8ef7", "#FFD600", "#10B981", "#EF4444", "#8B5CF6", "#3B82F6", "#EC4899", "#F97316"
 ];
 
+function downloadReport(url: string) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.click();
+}
+
 export default function Campaigns() {
   const { data: campaigns, isLoading } = useGetCampaigns();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const apiBase = `${window.location.origin}${import.meta.env.BASE_URL?.replace(/\/$/, "")}/api`;
   
   const createMutation = useCreateCampaign();
   const updateMutation = useUpdateCampaign();
@@ -152,9 +160,12 @@ export default function Campaigns() {
                       <MoreVertical className="w-5 h-5" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+                  <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
                     <DropdownMenuItem onClick={() => openEditModal(campaign)} className="cursor-pointer font-medium">
                       <Edit2 className="w-4 h-4 mr-2" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => downloadReport(`${apiBase}/reports/campaign/${campaign.id}?days=30`)} className="cursor-pointer font-medium">
+                      <Download className="w-4 h-4 mr-2" /> Download Report
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleDelete(campaign.id)} className="cursor-pointer text-[#ef4444] focus:text-[#ef4444] focus:bg-[#ef4444]/10 font-medium">
                       <Trash2 className="w-4 h-4 mr-2" /> Delete
