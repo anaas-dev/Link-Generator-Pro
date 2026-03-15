@@ -70,9 +70,9 @@ export default function Dashboard() {
     ? { startDate: customStart, endDate: customEnd }
     : { days: selectedDays };
 
-  const { data: summary, isLoading: loadingSummary } = useGetAnalyticsSummary({ query: queryParams });
-  const { data: clicksData, isLoading: loadingClicks } = useGetClicksOverTime({ query: queryParams });
-  const { data: topLinks, isLoading: loadingTopLinks } = useGetTopLinks({ query: { limit: 5 } });
+  const { data: summary, isLoading: loadingSummary } = useGetAnalyticsSummary(queryParams);
+  const { data: clicksData, isLoading: loadingClicks } = useGetClicksOverTime(queryParams);
+  const { data: topLinks, isLoading: loadingTopLinks } = useGetTopLinks({ limit: 5 });
   const { data: campaigns } = useGetCampaigns();
 
   const baseUrl = import.meta.env.BASE_URL?.replace(/\/$/, "");

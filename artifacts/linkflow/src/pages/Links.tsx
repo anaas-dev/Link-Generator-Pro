@@ -69,7 +69,7 @@ export default function Links() {
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const { data: qrData, isLoading: loadingQr } = useGetLinkQr(qrModalId as number, { query: { enabled: !!qrModalId } });
+  const { data: qrData, isLoading: loadingQr } = useGetLinkQr(qrModalId as number);
 
   // Composite QR + logo using Canvas API
   useEffect(() => {
